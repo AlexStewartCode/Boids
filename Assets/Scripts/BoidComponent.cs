@@ -1,30 +1,22 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class BoidComponent : MonoBehaviour
 {
     private float centerInfluence;
-    private float boidInfluence = 0.5f;
-    private float speed = 50;
-    private float corneringSpeed = 0.001f; 
+    private float avoidInfluence;
+    private float alignInfluence;
+    private float speed;
+    private float corneringSpeed; 
     private Vector3 closestCenter;
     [SerializeField] public float visionConeAngle;
     [SerializeField] public float movementConeAngle;
     List <Collider> collisions;
 
-    // Start is called before the first frame update
-    void Start()
+    
+    void Awake()
     {
         collisions = new List<Collider>();
-    }
-
-    
-    void FixedUpdate()
-    {
-        Move();
-        //Debug.DrawLine(transform.position, transform.forward + transform.position);
     }
 
     public void setCenterInfluence(float centerInfluence)
@@ -32,19 +24,29 @@ public class BoidComponent : MonoBehaviour
         this.centerInfluence = centerInfluence; 
     }
 
+    public void setAvoidInfluence(float avoidInfluence)
+    {
+        this.avoidInfluence = avoidInfluence;
+    }
+
+    public void setAlignInfluence(float alignInfluence)
+    {
+        this.alignInfluence = alignInfluence;
+    }
+
     public void setSpeed(float boidSpeed)
     {
         speed = boidSpeed;
     }
 
+    public void setVisionConeAngle(float visionConeAngle)
+    {
+        this.visionConeAngle = visionConeAngle;
+    }
+
     public void setCorneringSpeed(float corneringSpeed)
     {
         this.corneringSpeed = corneringSpeed;
-    }
-
-    private void OnTriggerEnter(Collider collision)
-    {
-        
     }
 
     private void OnTriggerStay(Collider collision)
@@ -62,7 +64,7 @@ public class BoidComponent : MonoBehaviour
 
     public void Move()
     {
-        Vector3 targetDir = -(calcCloseBoidInteractionsV3() * boidInfluence);
+        Vector3 targetDir = -(calcCloseBoidInteractionsV3());
 
         //Debug.Log(targetDir);
         if(!targetDir.Equals(transform.forward))
@@ -74,11 +76,13 @@ public class BoidComponent : MonoBehaviour
             targetDir = calcCenterInfluenceV3(closestCenter) * centerInfluence;
         }
 
+        Debug.DrawLine(transform.position, transform.position + targetDir, Color.magenta);
+
         Quaternion directionRotation = Quaternion.LookRotation(-targetDir);
 
         transform.rotation = Quaternion.Slerp(transform.rotation, directionRotation, corneringSpeed * Time.deltaTime);
         
-        transform.position += transform.forward * (1/(101 - speed * Time.deltaTime));
+        transform.position += transform.forward * (speed * Time.deltaTime);
     }
 
     private Vector3 calcCloseBoidInteractionsV3()
@@ -114,9 +118,11 @@ public class BoidComponent : MonoBehaviour
                 if (angleBetweenObjects < visionConeAngle)
                 {
                     //align
-                    if(obstacle.layer == 0 && obstacle.tag == "boid")
+                    if(obstacle.layer == 0 )
                     {
-                        desiredDirectionToLook += (obstacle.transform.forward);
+                        //Debug.Log("HERE");
+                        desiredDirectionToLook += (obstacle.transform.forward * alignInfluence);
+                        Debug.DrawLine(transform.position, transform.position + obstacle.transform.forward, Color.green);
                     }
 
                     //Find angle between forward vectors 
@@ -128,23 +134,24 @@ public class BoidComponent : MonoBehaviour
                         angleBetweenForwards = Mathf.Rad2Deg * Mathf.Acos(angleBetweenObjects / (transform.forward.magnitude * contact.magnitude));
                     }*/
 
-                    if (collision.gameObject.layer == 0 && angleBetweenObjects < movementConeAngle)
+                    if (collision.gameObject.layer == 0 && angleBetweenObjects < 180 - movementConeAngle)
                     {
-                        //Debug.Log(dist);
+                        //Debug.Log(angleBetweenObjects);
                         //avoid
                         /*
                         Vector3 avoid = new Vector3();
                         avoid.x = targetDir.x * (1 / dist);
                         avoid.y = targetDir.y * (1 / dist);
                         avoid.z = targetDir.z * (1 / dist);
-
-                        Debug.DrawLine(transform.position, -targetDir);
                         */
+
+                        //Debug.DrawLine(transform.position, -targetDir);
+                        
 
                         Vector3 avoid = (-targetDir.normalized * 5) / (dist);
 
-                        desiredDirectionToLook += avoid;
-                        //Debug.DrawLine(transform.position, transform.position + avoid);
+                        desiredDirectionToLook += (avoid * Mathf.Pow(avoidInfluence, 3));
+                        Debug.DrawLine(transform.position, transform.position + (avoid * Mathf.Pow(avoidInfluence, 3)), Color.blue);
                         //Debug.Log(avoid.magnitude);
                     }
                 }
@@ -168,66 +175,11 @@ public class BoidComponent : MonoBehaviour
         return desiredDirectionToLook.normalized;
     }
 
-    private Quaternion calcCloseBoidInteractions()
-    {
-        Quaternion rotation = Quaternion.identity; 
-
-        foreach (Collider collision in collisions)
-        {
-            //Find angle between objects 
-            Vector3 targetDir = collision.gameObject.transform.position - transform.position;
-            
-            float angleBetweenObjects = Vector3.Angle(targetDir, transform.forward);
-            
-            if (angleBetweenObjects < 180 - visionConeAngle)
-            {
-                //Debug.Log(angleBetweenObjects);
-                //Find angle between forward vectors 
-                Vector3 contact = collision.gameObject.transform.forward;
-                float angleBetweenForwards = Vector3.Dot(transform.forward, contact);
-
-                if (angleBetweenForwards != 0)
-                {
-                    angleBetweenForwards = Mathf.Rad2Deg * Mathf.Acos(angleBetweenObjects / (transform.forward.magnitude * contact.magnitude));
-                }
-
-
-                //align
-
-
-                Quaternion temp = Quaternion.LookRotation((collision.gameObject.transform.forward)/2);
-                //Debug.Log("T: " + collision.gameObject.transform.forward + " B: " + transform.forward);
-                
-
-                rotation *= Quaternion.Slerp(transform.rotation, temp, boidInfluence);
-                
-                if(collision.gameObject.layer == 0 && angleBetweenObjects < 180 - movementConeAngle)
-                {
-                    //Debug.Log(angleBetweenObjects);
-                }
-            }
-        }
-        if(rotation.Equals(Quaternion.identity))
-        {
-            return transform.rotation;
-        }
-        return rotation;
-    }
+   
 
     private Vector3 calcCenterInfluenceV3(Vector3 center)
     {
         //Debug.DrawLine(transform.position, center);
         return (transform.position - center).normalized;
-    }
-
-    private Quaternion calcCenterInfluence(Vector3 center)
-    {
-        Vector3 newDirection = (transform.position - center).normalized;
-
-        Quaternion directionRotation = Quaternion.LookRotation(newDirection);
-
-        return Quaternion.Slerp(transform.rotation, directionRotation, centerInfluence);
-
-        //return -(newDirection * centerInfluence);
     }
 }

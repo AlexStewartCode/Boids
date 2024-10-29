@@ -561,11 +561,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boidTemplate: {fileID: 4213572534340104675, guid: 890f3224580083e43a66e32b71b03aa3,
     type: 3}
-  boidNum: 10
-  boidCenterInfluence: 0.409
-  boidBoidInfluence: 0.5
-  boidSpeed: 31.3
-  boidCorneringSpeed: 0.0132
+  boidNum: 50
+  boidVisionCone: 180
+  boidCenterInfluence: 1.15
+  boidAvoidInfluence: 6.8
+  boidAlignInfluence: 100
+  boidSpeed: 25
+  boidCorneringSpeed: 0.458
   center: {x: 0, y: 0, z: 0}
 --- !u!4 &1744584615
 Transform:
@@ -575,7 +577,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1744584613}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.6519947, y: 1.5839331, z: 0.49270648}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
