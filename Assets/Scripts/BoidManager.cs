@@ -9,7 +9,7 @@ public class BoidManager : MonoBehaviour
     [SerializeField] [Range(0.0001f, 1)] public float boidCenterInfluence = 0.5f;
     [SerializeField][Range(0.0001f, 1)] public float boidBoidInfluence = 0.5f;
     [SerializeField][Range(1, 100)] public float boidSpeed = 1;
-    [SerializeField][Range(0.0001f, 0.1f)] public float boidCorneringSpeed = 0.5f;
+    [SerializeField][Range(0.0001f, 1f)] public float boidCorneringSpeed = 0.5f;
 
     private float setSpeed;
     private float setCenterInfluence;
@@ -39,7 +39,12 @@ public class BoidManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(boidSpeed != setSpeed || boidCenterInfluence != setCenterInfluence || 
+        foreach (BoidComponent boid in boids)
+        {
+            boid.Move();
+        }
+
+        if (boidSpeed != setSpeed || boidCenterInfluence != setCenterInfluence || 
             boidBoidInfluence != setBoidInfluence || boidCorneringSpeed != setCornering)
         {
             foreach (BoidComponent boid in boids)
@@ -57,9 +62,6 @@ public class BoidManager : MonoBehaviour
 
     private void FixedUpdate()
     {
-        foreach (BoidComponent boid in boids)
-        {
-            boid.Move();
-        }
+        
     }
 }

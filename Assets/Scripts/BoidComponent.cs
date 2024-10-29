@@ -76,9 +76,9 @@ public class BoidComponent : MonoBehaviour
 
         Quaternion directionRotation = Quaternion.LookRotation(-targetDir);
 
-        transform.rotation = Quaternion.Slerp(transform.rotation, directionRotation, corneringSpeed);
-
-        transform.position += transform.forward * (1/(101 - speed));
+        transform.rotation = Quaternion.Slerp(transform.rotation, directionRotation, corneringSpeed * Time.deltaTime);
+        
+        transform.position += transform.forward * (1/(101 - speed * Time.deltaTime));
     }
 
     private Vector3 calcCloseBoidInteractionsV3()
@@ -128,7 +128,7 @@ public class BoidComponent : MonoBehaviour
                         angleBetweenForwards = Mathf.Rad2Deg * Mathf.Acos(angleBetweenObjects / (transform.forward.magnitude * contact.magnitude));
                     }*/
 
-                    if (collision.gameObject.layer == 0 && angleBetweenObjects < 180 - movementConeAngle)
+                    if (collision.gameObject.layer == 0 && angleBetweenObjects < movementConeAngle)
                     {
                         //Debug.Log(dist);
                         //avoid
@@ -144,8 +144,8 @@ public class BoidComponent : MonoBehaviour
                         Vector3 avoid = (-targetDir.normalized * 5) / (dist);
 
                         desiredDirectionToLook += avoid;
-                        Debug.DrawLine(transform.position, transform.position + avoid);
-                        Debug.Log(avoid.magnitude);
+                        //Debug.DrawLine(transform.position, transform.position + avoid);
+                        //Debug.Log(avoid.magnitude);
                     }
                 }
             }
@@ -216,7 +216,7 @@ public class BoidComponent : MonoBehaviour
 
     private Vector3 calcCenterInfluenceV3(Vector3 center)
     {
-        Debug.DrawLine(transform.position, center);
+        //Debug.DrawLine(transform.position, center);
         return (transform.position - center).normalized;
     }
 
